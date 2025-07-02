@@ -220,8 +220,6 @@ def blackjack_action():
         return jsonify({'error': 'Вы не авторизованы'})
 
     user = db.session.get(User, session['user_id'])
-    if user.balance < bet:
-        return jsonify({'error': 'Недостаточно средств'})
 
     def create_deck():
         deck = [r + s for r in '23456789TJQKA' for s in '♠♥♦♣']
@@ -237,40 +235,63 @@ def blackjack_action():
         return total
 
     if action == 'start':
+        if user.balance < bet:
+            return jsonify({'error': 'Недостаточно средств'})
         deck = create_deck()
         player = [deck.pop(), deck.pop()]
         dealer = [deck.pop(), deck.pop()]
         session.update({'deck': deck, 'player': player, 'dealer': dealer, 'bet': bet})
-        return jsonify({'player': player, 'dealer': [dealer[0], '?'], 'done': False})
+        user.balance -= bet  # списываем ставку
+        db.session.commit()
+        return jsonify({'player': player, 'dealer': [dealer[0], '?'], 'done': False, 'balance': user.balance})
 
     deck = session.get('deck', [])
     player = session.get('player', [])
     dealer = session.get('dealer', [])
+    bet = session.get('bet', 0)
+
+    if not all([deck, player, dealer, bet]):
+        return jsonify({'error': 'Игра не начата'})
 
     if action == 'hit':
         if not deck:
             return jsonify({'error': 'Колода пуста, начните новую игру'})
         player.append(deck.pop())
         session['deck'] = deck
-        return jsonify({'player': player, 'dealer': [dealer[0], '?'], 'done': value(player) > 21})
+        if value(player) > 21:
+            # перебор — проигрыш
+            for k in ['deck', 'player', 'dealer', 'bet']:
+                session.pop(k, None)
+            db.session.commit()
+            return jsonify({'player': player, 'dealer': dealer, 'result': 'Перебор. Проигрыш', 'balance': user.balance, 'done': True})
+        return jsonify({'player': player, 'dealer': [dealer[0], '?'], 'done': False})
 
     elif action == 'stand':
         while value(dealer) < 17:
             if not deck:
                 return jsonify({'error': 'Колода пуста, начните новую игру'})
             dealer.append(deck.pop())
+
         p_val, d_val = value(player), value(dealer)
-        win = p_val <= 21 and (p_val > d_val or d_val > 21)
-        result = 'Победа!' if win else 'Проигрыш' if p_val > d_val or p_val > 21 else 'Ничья'
-        user.balance -= session['bet']
-        if win:
-            user.balance += session['bet'] * 2
-        db.session.commit()
+
+        if p_val > 21:
+            result = 'Перебор. Проигрыш'
+        elif d_val > 21 or p_val > d_val:
+            result = 'Победа!'
+            user.balance += bet * 2
+        elif p_val == d_val:
+            result = 'Ничья'
+            user.balance += bet  # возврат ставки
+        else:
+            result = 'Проигрыш'
+
         for k in ['deck', 'player', 'dealer', 'bet']:
             session.pop(k, None)
+        db.session.commit()
         return jsonify({'player': player, 'dealer': dealer, 'result': result, 'balance': user.balance, 'done': True})
 
     return jsonify({'error': 'Неверное действие'})
+
 
 @app.route('/donate')
 def donate():
