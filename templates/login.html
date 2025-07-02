@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Вход в казино</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #111, #1e1e1e);
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      animation: fadeIn 0.6s ease-in;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .container {
+      background: #1e1e1e;
+      padding: 30px 40px;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(0, 255, 255, 0.2);
+      max-width: 400px;
+      width: 100%;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 32px;
+      margin-bottom: 25px;
+      color: #0ff;
+      text-shadow: 0 0 10px #0ff;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    input[type="text"],
+    input[type="password"] {
+      padding: 12px;
+      font-size: 16px;
+      border-radius: 8px;
+      border: none;
+      background: #2a2a2a;
+      color: #fff;
+    }
+
+    input::placeholder {
+      color: #aaa;
+    }
+
+    .btn {
+      background: linear-gradient(135deg, #00c3ff, #007bff);
+      color: #fff;
+      border: none;
+      padding: 12px;
+      font-size: 16px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: 0.2s ease;
+      text-align: center;
+      text-decoration: none;
+      display: block;
+    }
+
+    .btn:hover {
+      background: linear-gradient(135deg, #00e6ff, #3399ff);
+      box-shadow: 0 4px 15px rgba(0, 255, 255, 0.4);
+      transform: scale(1.03);
+    }
+
+    .error {
+      color: #ff4d4d;
+      text-align: center;
+      margin-bottom: 15px;
+      background: #330000;
+      padding: 10px;
+      border-radius: 8px;
+      border-left: 4px solid #ff4d4d;
+    }
+
+    .create-link {
+      margin-top: 20px;
+      background: linear-gradient(135deg, #ff9900, #ff5e62);
+    }
+
+    .create-link:hover {
+      background: linear-gradient(135deg, #ffb347, #ff7676);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎰 Вход в казино</h1>
+
+    {% if error %}
+      <p class="error">{{ error }}</p>
+    {% endif %}
+
+    <form method="post">
+      <input type="text" name="username" placeholder="Логин" required>
+      <input type="password" name="password" placeholder="Пароль" required>
+      <button type="submit" class="btn">Войти</button>
+    </form>
+
+    <a href="/register" class="btn create-link">Создать аккаунт</a>
+  </div>
+</body>
+</html>

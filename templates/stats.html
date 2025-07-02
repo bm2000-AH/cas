@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>📊 Статистика игры</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+
+  <button class="theme-toggle">🌗 Тема</button>
+
+  <div class="container">
+    <h1>📈 Общая статистика</h1>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <h2>🎮 Сыграно игр</h2>
+        <p>{{ total_games or 0 }}</p>
+      </div>
+      <div class="stat-card">
+        <h2>🏆 Выигрышей</h2>
+        <p>{{ total_wins or 0 }}</p>
+      </div>
+      <div class="stat-card">
+        <h2>💰 Общий баланс</h2>
+        <p>{{ total_balance or 0 }} монет</p>
+      </div>
+    </div>
+
+    <div style="text-align:center; margin-top: 30px;">
+      <a href="{{ url_for('index') }}"><button>⬅️ На главную</button></a>
+    </div>
+  </div>
+
+  <script>
+    // Тема
+    document.addEventListener("DOMContentLoaded", () => {
+      const toggle = document.querySelector(".theme-toggle");
+      if (localStorage.getItem("theme") === "dark") {
+        document.body.classList.add("dark");
+      }
+      toggle?.addEventListener("click", () => {
+        document.body.classList.toggle("dark");
+        localStorage.setItem("theme", document.body.classList.contains("dark") ? "dark" : "light");
+      });
+    });
+  </script>
+
+</body>
+</html>

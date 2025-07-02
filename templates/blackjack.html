@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>🂡 Блэкджек</title>
+  <style>
+    body { background: #1e1e1e; color: #fff; font-family: sans-serif; text-align: center; padding: 30px; }
+    .card { font-size: 2rem; display: inline-block; margin: 5px; padding: 10px; border: 1px solid #fff; border-radius: 8px; }
+    .btn { padding: 10px 20px; font-size: 18px; margin: 10px; cursor: pointer; }
+    .top-bar { text-align: left; margin-bottom: 20px; }
+    .menu-btn {
+      background-color: #444;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .menu-btn:hover {
+      background-color: #666;
+    }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <button class="menu-btn" onclick="location.href='/'">🏠 В меню</button>
+  </div>
+
+  <h1>🃏 Блэкджек</h1>
+  <p>💰 Баланс: <strong id="balance">{{ balance }}</strong></p>
+  <p>Ставка: <input type="number" id="bet" value="10" min="1"></p>
+  <div>
+    <button class="btn" onclick="startGame()">Начать</button>
+    <button class="btn" onclick="hit()">Карта</button>
+    <button class="btn" onclick="stand()">Стоп</button>
+  </div>
+
+  <h2>Игрок</h2>
+  <div id="player-hand"></div>
+
+  <h2>Дилер</h2>
+  <div id="dealer-hand"></div>
+
+  <h3 id="result"></h3>
+
+  <script>
+    let player = [], dealer = [];
+
+    function renderHand(hand, el) {
+      el.innerHTML = '';
+      for (const card of hand) {
+        const div = document.createElement('div');
+        div.className = 'card';
+        div.textContent = card;
+        el.appendChild(div);
+      }
+    }
+
+    async function startGame() {
+      const bet = document.getElementById('bet').value;
+      const res = await fetch('/blackjack_action', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ action: 'start', bet })
+      });
+      const data = await res.json();
+      if (data.error) return alert(data.error);
+      player = data.player;
+      dealer = data.dealer;
+      renderHand(player, document.getElementById('player-hand'));
+      renderHand(dealer, document.getElementById('dealer-hand'));
+      document.getElementById('result').textContent = '';
+    }
+
+    async function hit() {
+      const res = await fetch('/blackjack_action', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ action: 'hit', player, dealer })
+      });
+      const data = await res.json();
+      player = data.player;
+      renderHand(player, document.getElementById('player-hand'));
+      if (data.done) stand(); // в случае перебора
+    }
+
+    async function stand() {
+      const res = await fetch('/blackjack_action', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ action: 'stand', player, dealer })
+      });
+      const data = await res.json();
+      dealer = data.dealer;
+      renderHand(player, document.getElementById('player-hand'));
+      renderHand(dealer, document.getElementById('dealer-hand'));
+      document.getElementById('result').textContent = data.result;
+      document.getElementById('balance').textContent = data.balance;
+    }
+  </script>
+</body>
+</html>

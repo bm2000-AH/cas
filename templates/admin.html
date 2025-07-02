@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Админ-панель</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    body {
+      background-color: #111;
+      color: #eee;
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #0f0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      background-color: #222;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    th, td {
+      padding: 12px 15px;
+      border-bottom: 1px solid #444;
+      text-align: center;
+    }
+    th {
+      background-color: #333;
+      color: #0f0;
+    }
+    tr:hover {
+      background-color: #2a2a2a;
+    }
+    form {
+      display: inline-block;
+      margin: 0;
+    }
+    .action-btn {
+      padding: 5px 10px;
+      font-size: 14px;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .block-btn {
+      background-color: #dc3545;
+    }
+    .edit-btn {
+      background-color: #007bff;
+    }
+    .input-edit {
+      width: 60px;
+      padding: 4px;
+      border-radius: 4px;
+      border: 1px solid #555;
+      background: #1a1a1a;
+      color: white;
+    }
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    a {
+      color: #0af;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <h1>Админ-панель</h1>
+    <a href="{{ url_for('index') }}">← На главную</a>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Логин</th>
+        <th>Баланс</th>
+        <th>Игры</th>
+        <th>Победы</th>
+        <th>Аватар</th>
+        <th>Редактировать</th>
+        <th>Блокировать</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for user in users %}
+      <tr>
+        <td>{{ user.id }}</td>
+        <td>{{ user.username }}</td>
+        <td>{{ user.balance }}</td>
+        <td>{{ user.games_played }}</td>
+        <td>{{ user.games_won }}</td>
+        <td>
+          {% if user.avatar %}
+            <img src="{{ url_for('static', filename='avatars/' ~ user.avatar) }}" width="40" height="40" style="border-radius: 50%;">
+          {% else %}
+            —
+          {% endif %}
+        </td>
+        <td>
+          <form action="{{ url_for('edit_balance') }}" method="POST">
+            <input type="hidden" name="user_id" value="{{ user.id }}">
+            <input type="number" name="new_balance" class="input-edit" value="{{ user.balance }}">
+            <button type="submit" class="action-btn edit-btn">💾</button>
+          </form>
+        </td>
+        <td>
+          <form action="{{ url_for('block_user') }}" method="POST">
+            <input type="hidden" name="user_id" value="{{ user.id }}">
+            <button type="submit" class="action-btn block-btn">🚫</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</body>
+</html>

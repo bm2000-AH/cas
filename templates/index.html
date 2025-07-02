@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Главная - Казино</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 0 20px;
+      animation: fadeIn 0.8s ease-in;
+      transition: background 0.4s, color 0.4s;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 42px;
+      margin-top: 40px;
+      color: var(--accent);
+      text-shadow: 0 0 15px var(--accent);
+    }
+
+    .avatar {
+      display: block;
+      width: 100px;
+      height: 100px;
+      object-fit: cover;
+      border-radius: 50%;
+      margin: 20px auto 10px;
+      border: 2px solid var(--accent);
+    }
+
+    p {
+      text-align: center;
+      font-size: 18px;
+    }
+
+    .menu {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 15px;
+      margin: 40px 0;
+    }
+
+    .menu a {
+      text-decoration: none;
+    }
+
+    .btn, .admin-btn {
+      background: linear-gradient(135deg, #00c3ff, #007bff);
+      color: #fff;
+      border: none;
+      padding: 12px 20px;
+      font-size: 16px;
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      display: inline-block;
+      min-width: 200px;
+      text-align: center;
+    }
+
+    .btn:hover, .admin-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 6px 20px rgba(0, 255, 255, 0.4);
+    }
+
+    .admin-btn {
+      background: linear-gradient(135deg, #ff416c, #ff4b2b);
+    }
+
+    .btn.back {
+      background: linear-gradient(135deg, #ff9900, #ff5e62);
+    }
+
+    .toast {
+      text-align: center;
+      margin: 10px auto;
+      padding: 10px 20px;
+      background: var(--bg-card);
+      border-left: 4px solid var(--accent);
+      color: var(--text);
+      width: fit-content;
+      border-radius: 6px;
+      animation: popIn 0.5s ease;
+    }
+
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.9); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+
+    .theme-toggle {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      background: transparent;
+      border: none;
+      font-size: 1.5em;
+      cursor: pointer;
+      color: var(--text);
+    }
+  </style>
+</head>
+<body>
+  <script>
+    // Применение темы при загрузке
+    document.addEventListener("DOMContentLoaded", () => {
+      if (localStorage.getItem("theme") === "dark") {
+        document.body.classList.add("dark");
+      }
+    });
+
+    function toggleTheme() {
+      document.body.classList.toggle("dark");
+      const isDark = document.body.classList.contains("dark");
+      localStorage.setItem("theme", isDark ? "dark" : "light");
+    }
+  </script>
+
+  <button class="theme-toggle" onclick="toggleTheme()">🌗 Тема</button>
+
+  <h1>🎰 Онлайн Казино</h1>
+
+  {% if avatar %}
+    <img src="{{ avatar }}" alt="avatar" class="avatar">
+  {% endif %}
+
+  <p>👤 Вы вошли как: <strong>{{ username }}</strong></p>
+  <p>💰 Баланс: <strong>{{ balance }}</strong></p>
+
+  <div class="menu">
+    <a href="/slots" class="btn">🎰 Игровые автоматы</a>
+    <a href="/roulette" class="btn">🎯 Рулетка</a>
+    <a href="{{ url_for('mines') }}" class="btn">💣 Мины</a>
+    <a href="{{ url_for('blackjack') }}" class="btn">🂡 Блэкджек</a>
+    <a href="/donate" class="btn">💰 Получить бонус</a>
+    <a href="/profile" class="btn">🧍‍♂️ Профиль</a>
+    <a href="/history" class="btn">📜 История игр</a>
+    <a href="/chat" class="btn">💬 Чат</a>
+    <a href="/logout" class="btn">🚪 Выйти</a>
+
+    {% if username == 'admin' %}
+      <a href="/admin" class="admin-btn">⚙️ Админ-панель</a>
+    {% endif %}
+  </div>
+
+  {% if message %}
+    <div class="toast show">{{ message }}</div>
+  {% endif %}
+</body>
+</html>

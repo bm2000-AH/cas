@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Чат игроков</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #111;
+      color: #eee;
+      margin: 0;
+      padding: 0;
+    }
+    .chat-container {
+      max-width: 800px;
+      margin: 30px auto;
+      background: #222;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 0 15px #000;
+    }
+    #messages {
+      height: 400px;
+      overflow-y: auto;
+      border: 1px solid #444;
+      padding: 10px;
+      background: #1b1b1b;
+      border-radius: 5px;
+      margin-bottom: 15px;
+    }
+    .message {
+      margin-bottom: 10px;
+    }
+    .message strong {
+      color: #5fd;
+    }
+    .input-group {
+      display: flex;
+    }
+    input[type="text"] {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 5px 0 0 5px;
+      font-size: 16px;
+    }
+    button {
+      padding: 10px 20px;
+      border: none;
+      background-color: #28a745;
+      color: white;
+      font-weight: bold;
+      font-size: 16px;
+      border-radius: 0 5px 5px 0;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #218838;
+    }
+
+    .back-button {
+      display: block;
+      margin-top: 20px;
+      text-align: center;
+    }
+
+    .back-button a {
+      text-decoration: none;
+      color: white;
+      background: #555;
+      padding: 10px 20px;
+      border-radius: 5px;
+      display: inline-block;
+      font-weight: bold;
+    }
+
+    .back-button a:hover {
+      background: #777;
+    }
+  </style>
+</head>
+<body>
+  <div class="chat-container">
+    <h2>Чат игроков</h2>
+    <div id="messages"></div>
+    <div class="input-group">
+      <input type="text" id="msg" placeholder="Введите сообщение" onkeypress="if(event.key==='Enter') sendMessage()">
+      <button onclick="sendMessage()">Отправить</button>
+    </div>
+
+    <!-- 🔙 Кнопка возврата -->
+    <div class="back-button">
+      <a href="/">🔙 Назад в меню</a>
+    </div>
+  </div>
+
+  <script>
+    const socket = io();
+    const username = "{{ username|e }}";
+
+    socket.on('connect', () => {
+      socket.send(`${username} присоединился к чату.`);
+    });
+
+    socket.on('message', (msg) => {
+      const msgDiv = document.getElementById("messages");
+      const messageEl = document.createElement("div");
+      messageEl.classList.add("message");
+      messageEl.textContent = msg;
+      msgDiv.appendChild(messageEl);
+      msgDiv.scrollTop = msgDiv.scrollHeight;
+    });
+
+    function sendMessage() {
+      const input = document.getElementById("msg");
+      const text = input.value.trim();
+      if (text !== "") {
+        socket.send(`${username}: ${text}`);
+        input.value = "";
+      }
+    }
+  </script>
+</body>
+</html>

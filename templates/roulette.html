@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>🎲 Кубик</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #1c1c1c, #2e2e2e);
+      color: #fff;
+      text-align: center;
+      padding: 30px;
+      transition: background 0.3s ease, color 0.3s ease;
+    }
+
+    body.light {
+      background: linear-gradient(135deg, #f2f2f2, #fff);
+      color: #111;
+    }
+
+    h1 {
+      font-size: 38px;
+      color: #ff416c;
+      text-shadow: 0 0 10px #ff416c;
+    }
+
+    label {
+      font-size: 18px;
+    }
+
+    input[type="number"] {
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 8px;
+      border: none;
+      margin-left: 10px;
+      width: 80px;
+      text-align: center;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      font-size: 18px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      background: linear-gradient(135deg, #ff4e50, #f9d423);
+      color: #111;
+      font-weight: bold;
+      margin-top: 20px;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 4px 15px rgba(255, 78, 80, 0.4);
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 6px 20px rgba(255, 78, 80, 0.6);
+    }
+
+    .btn.back {
+      background: #444;
+      color: #fff;
+      margin-top: 40px;
+    }
+
+    .btn.back:hover {
+      background: #666;
+    }
+
+    #dice-container {
+      perspective: 800px;
+      width: 100px;
+      height: 100px;
+      margin: 30px auto;
+    }
+
+    .dice {
+      width: 100px;
+      height: 100px;
+      position: relative;
+      transform-style: preserve-3d;
+      transform: rotateX(0deg) rotateY(0deg);
+      transition: transform 1s ease;
+    }
+
+    .face {
+      position: absolute;
+      width: 100px;
+      height: 100px;
+      background: #222;
+      color: white;
+      font-size: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid #ff416c;
+      box-shadow: 0 0 15px #ff416c;
+    }
+
+    .face1  { transform: rotateY(  0deg) translateZ(50px); }
+    .face2  { transform: rotateY(180deg) translateZ(50px); }
+    .face3  { transform: rotateY( 90deg) translateZ(50px); }
+    .face4  { transform: rotateY(-90deg) translateZ(50px); }
+    .face5  { transform: rotateX( 90deg) translateZ(50px); }
+    .face6  { transform: rotateX(-90deg) translateZ(50px); }
+
+    #result-message {
+      font-size: 20px;
+      margin-top: 20px;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+
+    #theme-toggle {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: inherit;
+      transition: transform 0.2s;
+    }
+
+    #theme-toggle:hover {
+      transform: scale(1.2);
+    }
+  </style>
+</head>
+<body>
+  <button id="theme-toggle">🌙</button>
+
+  <h1>🎲 Крути кубик</h1>
+  <p>💰 Баланс: <strong id="balance">{{ balance }}</strong></p>
+
+  <div>
+    <label>Число (1–6):
+      <input type="number" id="bet-number" min="1" max="6" required>
+    </label>
+  </div><br>
+
+  <div>
+    <label>Ставка:
+      <input type="number" id="amount" value="10" min="1" required>
+    </label>
+  </div>
+
+  <button class="btn" id="bet-btn">Бросить кубик</button>
+
+  <div id="dice-container">
+    <div class="dice" id="dice">
+      <div class="face face1">1</div> <!-- front -->
+      <div class="face face2">6</div> <!-- back -->
+      <div class="face face3">3</div> <!-- right -->
+      <div class="face face4">4</div> <!-- left -->
+      <div class="face face5">5</div> <!-- top -->
+      <div class="face face6">2</div> <!-- bottom -->
+    </div>
+  </div>
+
+  <p id="result-message"></p>
+  <a href="/" class="btn back">⬅️ Назад</a>
+
+  <script>
+    const dice = document.getElementById('dice');
+    const resultMsg = document.getElementById('result-message');
+    const balanceEl = document.getElementById('balance');
+
+    const rotations = {
+      1: [0, 0],
+      2: [90, 0],
+      3: [0, -90],
+      4: [0, 90],
+      5: [-90, 0],
+      6: [180, 0]
+    };
+
+    document.getElementById('bet-btn').addEventListener('click', async () => {
+      const bet = parseInt(document.getElementById('bet-number').value);
+      const amount = parseInt(document.getElementById('amount').value);
+
+      if (bet < 1 || bet > 6) {
+        resultMsg.textContent = '❗ Введите число от 1 до 6.';
+        resultMsg.style.color = 'red';
+        resultMsg.style.opacity = 1;
+        return;
+      }
+
+      resultMsg.style.opacity = 0;
+
+      const res = await fetch('/spin_roulette', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bet, amount })
+      });
+
+      const data = await res.json();
+
+      if (data.error) {
+        resultMsg.textContent = data.error;
+        resultMsg.style.color = 'red';
+        resultMsg.style.opacity = 1;
+        return;
+      }
+
+      const roll = parseInt(data.number);
+      const [x, y] = rotations[roll];
+      dice.style.transform = `rotateX(${x}deg) rotateY(${y}deg)`;
+
+      balanceEl.textContent = data.balance;
+      resultMsg.textContent = data.win ? '🎉 Угадали!' : '🙁 Не повезло.';
+      resultMsg.style.color = data.win ? 'lime' : 'gray';
+      resultMsg.style.opacity = 1;
+    });
+
+    // 🎨 Переключатель темы
+    const toggle = document.getElementById('theme-toggle');
+    toggle.addEventListener('click', () => {
+      const light = document.body.classList.toggle('light');
+      localStorage.setItem('theme', light ? 'light' : 'dark');
+      toggle.textContent = light ? '🌞' : '🌙';
+    });
+
+    if (localStorage.getItem('theme') === 'light') {
+      document.body.classList.add('light');
+      toggle.textContent = '🌞';
+    }
+  </script>
+</body>
+</html>

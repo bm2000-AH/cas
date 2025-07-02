@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>💣 Мины</title>
+  <style>
+    body {
+      background: #111;
+      color: white;
+      font-family: sans-serif;
+      text-align: center;
+      padding: 30px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(5, 60px);
+      gap: 10px;
+      justify-content: center;
+      margin-top: 20px;
+    }
+    .cell {
+      width: 60px;
+      height: 60px;
+      background: #333;
+      font-size: 1.5rem;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: background 0.2s;
+    }
+    .cell.clicked { background: #555; cursor: default; }
+    .cell.mine { background: red; }
+    .controls input {
+      width: 60px;
+      margin: 5px;
+      padding: 5px;
+    }
+    .btn {
+      padding: 10px 20px;
+      margin: 10px;
+      font-size: 16px;
+      cursor: pointer;
+      background: #444;
+      border: none;
+      color: white;
+      border-radius: 6px;
+    }
+    a.back-btn {
+      display: inline-block;
+      margin-top: 20px;
+      color: #0af;
+      text-decoration: none;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+  <h1>💣 Мины</h1>
+  <p>Баланс: <strong id="balance">{{ balance }}</strong></p>
+  <div class="controls">
+    Ставка: <input type="number" id="bet" value="100" min="1">
+    Мин: <input type="number" id="minesCount" value="3" min="1" max="24">
+    <button class="btn" onclick="start()">Начать</button>
+  </div>
+
+  <div class="grid" id="grid"></div>
+  <h2 id="status"></h2>
+  <button onclick="cashOut()" class="btn cashout">💰 Забрать выигрыш</button>
+  <a href="/" class="back-btn">⏎ Назад в меню</a>
+
+  <script>
+    let balance = parseInt("{{ balance }}");
+    let minePositions = [];
+    let opened = 0;
+    let playing = false;
+    const totalCells = 25;
+    let currentBet = 0;
+    let mineCount = 0;
+
+    function start() {
+      currentBet = +document.getElementById('bet').value;
+      mineCount = +document.getElementById('minesCount').value;
+
+      if (currentBet > balance) return alert("Недостаточно средств!");
+      if (mineCount >= totalCells) return alert("Слишком много мин!");
+
+      balance -= currentBet;
+      document.getElementById('balance').textContent = balance;
+      document.getElementById('status').textContent = '';
+      playing = true;
+      opened = 0;
+
+      // Генерация мин
+      minePositions = [...Array(totalCells).keys()];
+      minePositions.sort(() => Math.random() - 0.5);
+      minePositions = minePositions.slice(0, mineCount);
+
+      // Сетка
+      const grid = document.getElementById('grid');
+      grid.innerHTML = '';
+      for (let i = 0; i < totalCells; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.onclick = () => clickCell(cell, i);
+        grid.appendChild(cell);
+      }
+    }
+
+    function clickCell(cell, index) {
+      if (!playing || cell.classList.contains('clicked')) return;
+      cell.classList.add('clicked');
+
+      if (minePositions.includes(index)) {
+        cell.classList.add('mine');
+        cell.textContent = '💣';
+        document.getElementById('status').textContent = '💥 Бомба! Вы проиграли.';
+        playing = false;
+        revealMines();
+        sendResult(false, 0);
+      } else {
+        opened++;
+        cell.textContent = '💎';
+        const reward = Math.floor(currentBet * (1 + opened * 0.3));
+        document.getElementById('status').textContent = `💎 Найдено: ${opened}. Потенц. выигрыш: ${reward}`;
+
+        if (opened === totalCells - mineCount) {
+          // Победа!
+          balance += reward;
+          document.getElementById('balance').textContent = balance;
+          document.getElementById('status').textContent = `🎉 Победа! Вы выиграли ${reward}`;
+          playing = false;
+          sendResult(true, reward);
+        }
+      }
+    }
+
+    function revealMines() {
+      const grid = document.getElementById('grid').children;
+      minePositions.forEach(index => {
+        const cell = grid[index];
+        if (!cell.classList.contains('clicked')) {
+          cell.classList.add('mine');
+          cell.textContent = '💣';
+        }
+      });
+    }
+
+    function sendResult(win, reward) {
+      fetch('/mines_result', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ win: win, reward: reward, bet: currentBet })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.balance !== undefined) {
+          balance = data.balance;
+          document.getElementById('balance').textContent = balance;
+        }
+      });
+    }
+
+    function cashOut() {
+      if (!playing || opened === 0) return alert("Сначала откройте хотя бы одну клетку.");
+      const reward = Math.floor(currentBet * (1 + opened * 0.3));
+      balance += reward;
+      document.getElementById('balance').textContent = balance;
+      document.getElementById('status').textContent = `💰 Вы забрали ${reward}`;
+      playing = false;
+      sendResult(true, reward);
+      revealMines();
+    }
+  </script>
+</body>
+</html>

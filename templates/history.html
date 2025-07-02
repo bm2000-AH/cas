@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>История игр</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      padding: 40px;
+      background: #111;
+      color: #fff;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 30px;
+    }
+    th, td {
+      padding: 12px;
+      border-bottom: 1px solid #444;
+      text-align: center;
+    }
+    th {
+      background: #222;
+    }
+    tr:nth-child(even) {
+      background-color: #1a1a1a;
+    }
+    .win {
+      color: lime;
+    }
+    .lose {
+      color: crimson;
+    }
+    a.btn {
+      margin-top: 30px;
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+  <h1>📜 История игр</h1>
+  <table>
+    <thead>
+      <tr>
+        <th>Дата</th>
+        <th>Игра</th>
+        <th>Ставка</th>
+        <th>Выбор</th>
+        <th>Выпало</th>
+        <th>Результат</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for log in logs %}
+      <tr>
+        <td>{{ log.timestamp.strftime('%d.%m.%Y %H:%M') }}</td>
+        <td>{{ log.game_type }}</td>
+        <td>{{ log.bet_amount }}</td>
+        <td>{{ log.bet_number }}</td>
+        <td>{{ log.result_number }}</td>
+        <td class="{{ 'win' if log.win else 'lose' }}">{{ 'Победа' if log.win else 'Поражение' }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <a href="/" class="btn">⬅️ Назад</a>
+</body>
+</html>
